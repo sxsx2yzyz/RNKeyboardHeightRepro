@@ -2,78 +2,148 @@
 
 ![Build](https://github.com/sxsx2yzyz/RNKeyboardHeightRepro/workflows/Pre%20Merge%20Checks/badge.svg)
 
-This is your new React Native Reproducer project.
+A React Native project to reproduce keyboard height detection issues on Android when switching between different keyboard types.
 
-# Reproducer TODO list
+## 🐛 Issue Description
 
-- [x] 1. Create a new reproducer project.
-- [ ] 2. Git clone your repository locally.
-- [ ] 3. Edit the project to reproduce the failure you're seeing.
-- [ ] 4. Push your changes, so that Github Actions can run the CI.
-- [ ] 5. Make sure the repository is public and share the link with the issue you reported.
+**Problem**: When switching between different keyboard types on Android, `Keyboard.addListener` events and `Keyboard.metrics()?.height` return the height of the previous keyboard instead of the current one.
 
-# How to use this Reproducer
+**Platform**: Android only (iOS not affected)
 
-This project has been created with `npx @react-native-community/cli init` and is a vanilla React Native app.
+**Test Environment**: 
+- Android Emulator: Medium Phone API 36.0
+- React Native: Latest version
 
-> [!IMPORTANT]  
-> Make sure you have completed the [React Native - Environment Setup](https://reactnative.dev/docs/set-up-your-environment) so that you have a working environment locally.
+**Affected Scenarios**:
+- Switching from numeric keyboard to password keyboard
+- Switching from system security keyboard to regular keyboard
+- Any keyboard type change where heights differ
 
-## Step 1: Start the Metro Server
+**Impact**:
+- Both event callback heights and static `Keyboard.metrics()?.height` values are incorrect
+- Issue resolves on next keyboard opening
+- Consistently reproducible across different keyboard types
+- **Video demonstration available**: [screenRecord.mov](./screenRecord.mov) in the root directory
 
-First, you will need to start **Metro**, the JavaScript _bundler_ that ships _with_ React Native.
+## 🚀 Quick Start
 
-To start Metro, run the following command from the _root_ of your React Native project:
+### Prerequisites
+Make sure you have completed the [React Native Environment Setup](https://reactnative.dev/docs/set-up-your-environment).
 
+### Installation & Running
+
+1. **Clone the repository**
 ```bash
-# using npm
-npm start
+git clone https://github.com/sxsx2yzyz/RNKeyboardHeightRepro.git
+cd RNKeyboardHeightRepro
+```
 
-# OR using Yarn
+2. **Install dependencies**
+```bash
+cd ReproducerApp
+npm install
+# or
+yarn install
+```
+
+3. **Start Metro bundler**
+```bash
+npm start
+# or
 yarn start
 ```
 
-## Step 2: Start your Application
-
-Let Metro Bundler run in its _own_ terminal. Open a _new_ terminal from the _root_ of your React Native project. Run the following command to start your _Android_ or _iOS_ app:
-
-### For Android
-
+4. **Run on Android**
 ```bash
-# using npm
 npm run android
-
-# OR using Yarn
+# or
 yarn android
 ```
 
-### For iOS
+## 🔍 How to Reproduce the Issue
 
-First, make sure you install dependencies with:
+### Test Environment
+- **Android Emulator**: Medium Phone API 36.0
+- **Platform**: Android only (iOS not affected)
 
-```bash
-cd ios && bundle install && bundle exec pod install
+### Step-by-Step Reproduction
+
+1. **Launch the app** - You'll see two text inputs and a keyboard height display
+2. **Tap the first input field** - A numeric keyboard appears, note the height
+3. **Switch to the second input field** - The keyboard type changes, but the displayed height remains from the previous keyboard
+4. **Switch back and forth** - The issue persists until the next keyboard opening
+
+### Expected vs Actual Behavior
+
+**Expected**: Keyboard height should update immediately when switching keyboard types
+**Actual**: Keyboard height shows the previous keyboard's height until next keyboard opening
+
+## 📱 App Structure
+
+The reproduction app contains:
+
+- **Two TextInput components** with different keyboard configurations:
+  - Input 1: `keyboardType='numeric'` + `secureTextEntry={true}`
+  - Input 2: `keyboardType='visible-password'` + `secureTextEntry={false}`
+
+- **Real-time keyboard height display** showing current detected height
+
+- **Keyboard event listeners** monitoring `keyboardDidShow` and `keyboardDidHide` events
+
+## 🛠 Technical Details
+
+### Code Implementation
+
+```typescript
+const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+useEffect(() => {
+  const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', (e) => {
+    setKeyboardHeight(e.endCoordinates.height);
+  });
+  const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', (e) => {
+    setKeyboardHeight(e.endCoordinates.height);
+  });
+  // ...
+}, []);
 ```
 
-Then you can run the iOS app with:
+### Affected APIs
 
-```bash
-# using npm
-npm run ios
+- `Keyboard.addListener('keyboardDidShow', callback)`
+- `Keyboard.addListener('keyboardDidHide', callback)`
+- `Keyboard.metrics()?.height`
 
-# OR using Yarn
-yarn ios
-```
+## 📋 Reproduction Checklist
 
-If everything is set up _correctly_, you should see your new app running in your _Android Emulator_ or _iOS Simulator_ shortly provided you have set up your emulator/simulator correctly.
+- [x] Create reproduction project
+- [x] Implement keyboard type switching
+- [x] Add real-time height monitoring
+- [x] Test on Android device/emulator
+- [x] Document reproduction steps
+- [ ] Submit issue to React Native repository
 
-This is one way to run your app — you can also run it directly from within Android Studio and Xcode respectively.
+## 🐛 Issue Status
 
-## Step 3: Modifying your App
+- **Platform**: Android only (iOS not affected)
+- **Test Environment**: Medium Phone API 36.0 emulator
+- **React Native Version**: Latest
+- **Reproducible**: Yes
+- **Status**: Open
+- **Video Evidence**: [screenRecord.mov](./screenRecord.mov) in root directory
 
-Now that you have successfully run the app, let's modify it.
+## 📞 Contributing
 
-1. Open `App.tsx` in your text editor of choice and edit some lines.
-2. For **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Developer Menu** (<kbd>Ctrl</kbd> + <kbd>M</kbd> (on Window and Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (on macOS)) to see your changes!
+If you can reproduce this issue or have additional information, please:
 
-   For **iOS**: Hit <kbd>Cmd ⌘</kbd> + <kbd>R</kbd> in your iOS Simulator to reload the app and see your changes!
+1. Test the reproduction steps above
+2. Report any variations or additional scenarios
+3. Share device/emulator details if the issue differs
+
+## 📄 License
+
+This project is open source and available under the [MIT License](LICENSE).
+
+---
+
+**Note**: This is a reproduction project for a React Native keyboard height detection issue. The app is intentionally minimal to focus on the specific problem.

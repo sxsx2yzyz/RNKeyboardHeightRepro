@@ -5,24 +5,41 @@
  * @format
  */
 
-import { NewAppScreen } from '@react-native/new-app-screen';
-import { StatusBar, StyleSheet, useColorScheme, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import {
+  Keyboard,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 
-function App() {
-  const isDarkMode = useColorScheme() === 'dark';
+function App(): React.JSX.Element {
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', (e) => {
+      setKeyboardHeight(e.endCoordinates.height);
+    });
+    const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', (e) => {
+      setKeyboardHeight(e.endCoordinates.height);
+    });
+    return () => {
+      keyboardDidShowListener.remove();
+      keyboardDidHideListener.remove();
+    };
+  }, []);
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <NewAppScreen templateFileName="App.tsx" />
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <Text>keyboardHeight: {keyboardHeight}</Text>
+      <TextInput style={{ width: '100%', height: 40, borderColor: 'gray', borderWidth: 1 }} 
+        keyboardType='numeric'
+        secureTextEntry={true}
+      />
+      <TextInput style={{ width: '100%', height: 40, borderColor: 'gray', borderWidth: 1 }} 
+        keyboardType='visible-password'
+        secureTextEntry={false}
+      />
     </View>
-  );
+  )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-});
-
 export default App;
